@@ -43,7 +43,8 @@ jobs:
 
       - name: Commit any changes
         run: |
-          git add Casks
+          mkdir -p Casks
+          git add -A Casks
           if git diff --cached --quiet; then
             echo "No cask changed."
             exit 0

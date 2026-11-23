@@ -59,6 +59,7 @@ entries.each do |entry|
     next
   end
 
+  Dir.mkdir(File.join(ROOT, "Casks")) unless Dir.exist?(File.join(ROOT, "Casks"))
   target = File.join(ROOT, "Casks", "#{cask}.rb")
   if File.exist?(target) && File.read(target) == body
     puts "#{cask}: up to date"
