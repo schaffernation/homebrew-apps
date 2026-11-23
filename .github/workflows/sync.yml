@@ -1,0 +1,54 @@
+name: Sync casks
+
+# Copy each app's cask from its own repository every hour, when casks.yaml
+# or the script changes, and when you run it from the Actions tab.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [casks.yaml, scripts/sync.rb]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy the casks
+        run: ruby scripts/sync.rb
+
+      # brew style only checks casks by name, from a tap, so link this
+      # checkout in as the schaffernation/apps tap first.
+      - name: Check the casks
+        run: |
+          shopt -s nullglob
+          casks=(Casks/*.rb)
+          (( ${#casks[@]} )) || exit 0
+          taps="$(brew --repository)/Library/Taps/schaffernation"
+          mkdir -p "$taps"
+          ln -sfn "$PWD" "$taps/homebrew-apps"
+          brew trust schaffernation/apps 2>/dev/null || true
+          names=()
+          for c in "${casks[@]}"; do names+=("schaffernation/apps/$(basename "$c" .rb)"); done
+          brew style --cask "${names[@]}"
+
+      - name: Commit any changes
+        run: |
+          git add Casks
+          if git diff --cached --quiet; then
+            echo "No cask changed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Sync casks: $(git diff --cached --name-only | xargs -n1 basename | sed 's/\.rb$//' | paste -sd, -)"
+          git push

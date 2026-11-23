@@ -1,0 +1,12 @@
+# The casks this tap publishes. Each cask belongs to its app's own
+# repository, at packaging/homebrew/NAME.rb. The Sync casks workflow copies
+# it into Casks/.
+#
+#   cask  The cask's name: what you type after `schaffernation/apps/`.
+#         The file must declare `cask "NAME"` with this name.
+#   repo  The GitHub repository that owns the cask. It must be public.
+#   ref   Optional. The branch or tag to read. The default is the
+#         repository's default branch.
+
+- cask: tend
+  repo: schaffernation/tend
